@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <pthread.h>
 using namespace std;
+#define int long long
 
 #define all(x) x.begin(), x.end()
 
@@ -49,8 +50,8 @@ void* multiply(void* args) {
         fa[i] *= fb[i];
 
     ifft(fa);
-    c.resize(n);
-    for (int i = 0; i < n; i++)
+    c.resize(a.size()+b.size()-1);
+    for (int i = 0; i < c.size(); i++)
         c[i] = round(fa[i].real());
 
     return nullptr;
@@ -66,8 +67,8 @@ signed main() {
     for (int &i : a) cin >> i;
     for (int &i : b) cin >> i;
 
-    cout << "a = "; for (int i : a) cout << i << " "; cout << endl;
-    cout << "b = "; for (int i : b) cout << i << " "; cout << endl;
+    //cout << "a = "; for (int i : a) cout << i << " "; cout << endl;
+    //cout << "b = "; for (int i : b) cout << i << " "; cout << endl;
 
     auto start = chrono::high_resolution_clock::now();
 
@@ -78,7 +79,7 @@ signed main() {
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
 
-    cout << "c = "; for (int i : c) cout << i << " "; cout << endl;
+    //cout << "c = "; for (int i : c) cout << i << " "; cout << endl;
     cout << "Time to multiply polys of sizes " << a.size() << " and " << b.size() << " (in ms): " << duration.count() << endl;
 
     return 0;

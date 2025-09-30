@@ -18,7 +18,7 @@ signed main() {
     for(int &i : a) i = distribution(gen);
     for(int &i : b) i = distribution(gen);
 
-    cout << n << " " << m << " " << m+n+1 << endl;
+    cout << n << " " << m << endl;
     for (int i : a) cout << i << " "; cout << endl;
     for (int i : b) cout << i << " "; cout << endl;
 
