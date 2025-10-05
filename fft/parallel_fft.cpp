@@ -4,6 +4,7 @@ using namespace std;
 #define int long long
 
 #define all(x) x.begin(), x.end()
+// Limita a profundidade máxima de criação de threads para evitar overhead na chamada recursiva
 #define MAX_DEPTH 3
 
 const long double PI = 4*atanl(1);
@@ -16,6 +17,7 @@ struct ThreadData {
 
 void fft(vector<cd> &a, int depth);
 
+// Wrapper que adapta a chamada da FFT para o padrão esperado pelo pthread_create
 void* fft_thread_wrapper(void* arg) {
     auto* data = static_cast<ThreadData*>(arg);
     fft(*data->a, data->depth);
@@ -36,9 +38,11 @@ void fft(vector<cd> &a, int depth) {
         ThreadData data1 = { &a0, depth + 1 };
         ThreadData data2 = { &a1, depth + 1 };
 
+        // Criação das threads que processam a0 e a1 simultaneamente
         pthread_create(&thread1, nullptr, fft_thread_wrapper, &data1);
         pthread_create(&thread2, nullptr, fft_thread_wrapper, &data2);
 
+        // Aguarda as duas threads terminrarem antes de prosseguir
         pthread_join(thread1, nullptr);
         pthread_join(thread2, nullptr);
     } else {
@@ -72,7 +76,7 @@ vector<int> multiply(vector<int> &a, vector<int> &b) {
         n *= 2;
     fa.resize(n); fb.resize(n);
 
-    // chamada sequencial de fft, mas executada de forma paralela
+    // Chamada sequencial de fft, mas internamente a FFT executa em paralelo
     fft(fa, 0);
     fft(fb, 0);
 
