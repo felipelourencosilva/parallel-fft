@@ -8,6 +8,10 @@ using namespace std;
 const long double PI = 4*atanl(1);
 using cd = complex<long double>;
 
+struct ThreadData {
+    vector<cd>* a;
+};
+
 void fft(vector<cd> &a) {
     int n = a.size();
     if (n == 1) return; // because a_0*z^0 = a_0 (evaluating at any point returns a_0)
@@ -28,6 +32,12 @@ void fft(vector<cd> &a) {
     }
 }
 
+void* fft_thread_wrapper(void* arg) {
+    ThreadData* data = static_cast<ThreadData*>(arg);
+    fft(*data->a);
+    return nullptr;
+}
+
 void ifft(vector<cd> &a) { // DFT(DFT(c0, c1, c2, ..., c(n-1))) = (nc0, nc(n-1), nc(n-2), ..., nc1)
     fft(a);
     reverse(a.begin()+1, a.end());
@@ -42,7 +52,17 @@ vector<int> multiply(vector<int> &a, vector<int> &b) {
     while (n < a.size() + b.size() - 1)
         n *= 2;
     fa.resize(n); fb.resize(n);
-    fft(fa); fft(fb);
+
+    pthread_t thread1, thread2;
+
+    ThreadData data1 = { &fa };
+    ThreadData data2 = { &fb };
+
+    pthread_create(&thread1, nullptr, fft_thread_wrapper, &data1);
+    pthread_create(&thread2, nullptr, fft_thread_wrapper, &data2);
+
+    pthread_join(thread1, nullptr);
+    pthread_join(thread2, nullptr);
 
     for (int i = 0; i < n; i++)
         fa[i] *= fb[i];
