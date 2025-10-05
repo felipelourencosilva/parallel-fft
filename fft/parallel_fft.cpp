@@ -4,15 +4,25 @@ using namespace std;
 #define int long long
 
 #define all(x) x.begin(), x.end()
+#define MAX_DEPTH 3
 
 const long double PI = 4*atanl(1);
 using cd = complex<long double>;
 
 struct ThreadData {
     vector<cd>* a;
+    int depth;
 };
 
-void fft(vector<cd> &a) {
+void fft(vector<cd> &a, int depth);
+
+void* fft_thread_wrapper(void* arg) {
+    auto* data = static_cast<ThreadData*>(arg);
+    fft(*data->a, data->depth);
+    return nullptr;
+}
+
+void fft(vector<cd> &a, int depth) {
     int n = a.size();
     if (n == 1) return; // because a_0*z^0 = a_0 (evaluating at any point returns a_0)
     vector<cd> a0(n/2), a1(n/2);
@@ -20,7 +30,22 @@ void fft(vector<cd> &a) {
         a0[i] = a[2*i];
         a1[i] = a[2*i+1];
     }
-    fft(a0); fft(a1);
+
+    if (depth < MAX_DEPTH) {
+        pthread_t thread1, thread2;
+        ThreadData data1 = { &a0, depth + 1 };
+        ThreadData data2 = { &a1, depth + 1 };
+
+        pthread_create(&thread1, nullptr, fft_thread_wrapper, &data1);
+        pthread_create(&thread2, nullptr, fft_thread_wrapper, &data2);
+
+        pthread_join(thread1, nullptr);
+        pthread_join(thread2, nullptr);
+    } else {
+        fft(a0, depth + 1);
+        fft(a1, depth + 1);
+    }
+
     long double alpha = 2*PI/n;
     cd omega(cos(alpha), sin(alpha));
     cd omega_i = 1;
@@ -32,14 +57,8 @@ void fft(vector<cd> &a) {
     }
 }
 
-void* fft_thread_wrapper(void* arg) {
-    ThreadData* data = static_cast<ThreadData*>(arg);
-    fft(*data->a);
-    return nullptr;
-}
-
 void ifft(vector<cd> &a) { // DFT(DFT(c0, c1, c2, ..., c(n-1))) = (nc0, nc(n-1), nc(n-2), ..., nc1)
-    fft(a);
+    fft(a, 0);
     reverse(a.begin()+1, a.end());
     int n = a.size();
     for (cd &i : a)
@@ -53,16 +72,9 @@ vector<int> multiply(vector<int> &a, vector<int> &b) {
         n *= 2;
     fa.resize(n); fb.resize(n);
 
-    pthread_t thread1, thread2;
-
-    ThreadData data1 = { &fa };
-    ThreadData data2 = { &fb };
-
-    pthread_create(&thread1, nullptr, fft_thread_wrapper, &data1);
-    pthread_create(&thread2, nullptr, fft_thread_wrapper, &data2);
-
-    pthread_join(thread1, nullptr);
-    pthread_join(thread2, nullptr);
+    // chamada sequencial de fft, mas executada de forma paralela
+    fft(fa, 0);
+    fft(fb, 0);
 
     for (int i = 0; i < n; i++)
         fa[i] *= fb[i];
