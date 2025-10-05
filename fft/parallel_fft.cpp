@@ -36,9 +36,7 @@ void ifft(vector<cd> &a) { // DFT(DFT(c0, c1, c2, ..., c(n-1))) = (nc0, nc(n-1),
         i /= n;
 }
 
-vector<int> a, b, c;
-
-void* multiply(void* args) {
+vector<int> multiply(vector<int> &a, vector<int> &b) {
     vector<cd> fa(all(a)), fb(all(b));
     int n = 1;
     while (n < a.size() + b.size() - 1)
@@ -50,11 +48,10 @@ void* multiply(void* args) {
         fa[i] *= fb[i];
 
     ifft(fa);
-    c.resize(a.size()+b.size()-1);
-    for (int i = 0; i < c.size(); i++)
-        c[i] = round(fa[i].real());
-
-    return nullptr;
+    vector<int> res(a.size()+b.size()-1);
+    for (int i = 0; i < res.size(); i++)
+        res[i] = round(fa[i].real());
+    return res;
 }
 
 signed main() {
@@ -63,7 +60,7 @@ signed main() {
     // n: degree of first polynomial
     // m: degree of second polynomial
     int n, m; cin >> n >> m;
-    a.resize(n+1); b.resize(m+1);
+    vector<int> a(n+1), b(m+1);
     for (int &i : a) cin >> i;
     for (int &i : b) cin >> i;
 
@@ -71,11 +68,7 @@ signed main() {
     //cout << "b = "; for (int i : b) cout << i << " "; cout << endl;
 
     auto start = chrono::high_resolution_clock::now();
-
-    pthread_t thread;
-    pthread_create(&thread, NULL, multiply, NULL);
-    pthread_join(thread, NULL);
-
+    vector<int> c = multiply(a, b);
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
 
