@@ -12,7 +12,7 @@ The problem is that the work is not evenly distributed on ranges of 'c'. Therefo
 we will compute, for each position 'k', how many pairs (i, j) exist such that i+j=k.
 */
 
-const int NUM_TASKS = 100;
+const int NUM_TASKS = 8;
 const int NUM_THREADS = 8;
 ThreadPool threadPool(NUM_THREADS);
 
@@ -55,7 +55,7 @@ vector<pair<int, int>> getPartitions(int sum) {
     vector<pair<int, int>> ret(NUM_TASKS);
     int prev = 0;
     int i = 0;
-    for (int t = 0; t < NUM_THREADS; t++) {
+    for (int t = 0; t < NUM_TASKS; t++) {
         long long curSum = 0;
         while (curSum < target && i < work.size()) {
             curSum += work[i].second - work[i].first + 1;
@@ -83,17 +83,17 @@ signed main() {
     auto start = chrono::high_resolution_clock::now();
     c.assign(n+m+1, 0);
 
-    vector<int> ids(NUM_THREADS);
-    for (int t = 0; t < NUM_THREADS; t++)
+    vector<int> ids(NUM_TASKS);
+    for (int t = 0; t < NUM_TASKS; t++)
         ids[t] = threadPool.execute(f, partitions[t]);
-    for (int t = 0; t < NUM_THREADS; t++)
+    for (int t = 0; t < NUM_TASKS; t++)
         threadPool.join(ids[t]);
     
     auto end = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::milliseconds>(end - start);
 
     cout << "Time to multiply polys of sizes " << a.size() << " and " << b.size() << " (in ms): " << duration.count() << endl;
-    // cout << "c = "; for (int i : c) cout << i << " "; cout << endl;
+    //cout << "c = "; for (int i : c) cout << i << " "; cout << endl;
     
     return 0;
 }

@@ -106,6 +106,7 @@ public:
 
     void join(int taskid) {
         while (1) {
+            usleep(100);
             pthread_mutex_lock(&setMutex);
             if (!pendingTaskIds.count(taskid)) break;
             pthread_mutex_unlock(&setMutex);
