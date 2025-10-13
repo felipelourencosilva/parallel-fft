@@ -11,7 +11,7 @@ The problem is that the work is not evenly distributed on ranges of 'c'. Therefo
 we will compute, for each position 'k', how many pairs (i, j) exist such that i+j=k.
 */
 
-const int NUM_THREADS = 8;
+const int NUM_THREADS = 4;
 pthread_t threads[NUM_THREADS];
 vector<int> a, b, c;
 vector<pair<int, int>> work;
